@@ -14,8 +14,7 @@ MCsim::MCsim(int Length, double Temp)
     initialize_rand();
     initialize_conf();
     initialize_energy();
-    precalculate_table();
-    
+    precalculate_table(); 
 }
 
 void MCsim::MCSweeps(int Nmcs)  
@@ -40,12 +39,10 @@ vec MCsim::Magnetization()
     {
       for(int j=0; j<L; j++)
       { 
-        //std::cout << "value of state at position: " << SpinConf[i][j] << std::endl;
         Mag.x += CosTable[SpinConf[i][j] - 1];
         Mag.y += SineTable[SpinConf[i][j] - 1];
       }
     }
-    //std::cout << "Magx: " << Mag.x << "   Magy: " << Mag.y << std::endl;
     return Mag;
 }
 
@@ -65,7 +62,6 @@ void MCsim::initialize_conf()
       for(int j=0; j<L; j++)
       {
         SpinConf[i][j] = random_state(); 
-        //std::cout << "the next random state is: " << SpinConf[i][j] << std::endl; 
       }
     }
     for(int i=0; i<(L-1); i++)  
@@ -145,8 +141,8 @@ void MCsim::change_conf()
     //random position to change
     changepos[0] = gen0toL(rng);
     changepos[1] = gen0toL(rng);
-   // std::cout << "position of change: (" << changepos[0] << ", " << changepos[1] << ")\n";
-    //save the old state and change position to a new state
+    
+	//save the old state and change position to a new state
     old_s = SpinConf[changepos[0]][changepos[1]]; 
     SpinConf[changepos[0]][changepos[1]] = random_state();
 } 
@@ -159,18 +155,15 @@ void MCsim::calc_delta_E()
     //summing nearest neighbour interactions for the old and new state
     for (int i=0; i<2; i++)
     {
-      //std::cout << "contribution of (0 is old, 1 is new): " << i << std::endl; 
-      //std::cout << "state i: " << state[i] << "   down 1: " << SpinConf[F[changepos[0]]][changepos[1]] << "  ";
-      contribution[i] += energy_contribution(state[i], SpinConf[F[changepos[0]]][changepos[1]]); 
-      //std::cout << "contribution: " << contribution[i] << std::endl;
-      contribution[i] += energy_contribution(state[i], SpinConf[B[changepos[0]]][changepos[1]]); 
-      //std::cout << "contribution: " << contribution[i] << "   up 1: " << SpinConf[B[changepos[0]]][changepos[1]] << std::endl;
-      contribution[i] += energy_contribution(state[i], SpinConf[changepos[0]][F[changepos[1]]]); 
-      //std::cout << "contribution: " << contribution[i] << "   right 1: " << SpinConf[changepos[0]][F[changepos[1]]] << std::endl;
-      contribution[i] += energy_contribution(state[i], SpinConf[changepos[0]][B[changepos[1]]]); 
-      //std::cout << "contribution: " << contribution[i] << "   left 1: " << SpinConf[changepos[0]][B[changepos[1]]] << std::endl;
+      contribution[i] += energy_contribution(state[i], 
+	                        SpinConf[F[changepos[0]]][changepos[1]]); 
+      contribution[i] += energy_contribution(state[i], 
+	                        SpinConf[B[changepos[0]]][changepos[1]]); 
+      contribution[i] += energy_contribution(state[i], 
+	                        SpinConf[changepos[0]][F[changepos[1]]]); 
+      contribution[i] += energy_contribution(state[i], 
+	                        SpinConf[changepos[0]][B[changepos[1]]]); 
     }
-    //std::cout << std::endl;
 
     //delta E is the difference between the new and the old contribution
     delta_E = contribution[1] - contribution[0];
@@ -178,7 +171,6 @@ void MCsim::calc_delta_E()
 
 void MCsim::check_pass()
 {
-   // std::cout << "the value of delta_E:  " << delta_E << std::endl;
     if (delta_E <= 0)
     {
       advance();
@@ -186,7 +178,6 @@ void MCsim::check_pass()
     else
     {
       int index = delta_E * 2.0 / 3.0;
-   //   std::cout << "the value of index is: " << index << std::endl;
       if (ExpTable[index] > dis(rng))
       {
         advance();
