@@ -10,55 +10,61 @@
 #define _USE_MATH_DEFINES
 
 typedef std::vector<double> Row;
-typedef std::vector<int> iRow;
+typedef std::vector<int> intRow;
 typedef std::vector<Row> Column;
-typedef std::vector<iRow> iColumn; 
+typedef std::vector<intRow> intMat; 
 typedef std::chrono::high_resolution_clock myclock;
 
 struct vec
 {
     double x, y;
 };
+
 class MCsim 
 {
     private:
-      //variables
-      iColumn SpinConf;        //2D vector grid to hold the spin conformation
-      iRow F, B;              //forward and back vectors to shift indices by 1 with looped boundaries
-      double delta_E, E_tot;  //Energy change between previous and current and total energy
-      double T;               //temperature of the system
-      double ExpTable[5];     //table to hold precalculated exp(delta_E) values for delta_E > 0
-      double SineTable[3];    //table to hold possible sine(theta) values
-      double CosTable[3];     //table to hold possible cosine(theta) values
-      int L;                  //lattice size of the system
-      int SweepSize;          //number of iterations in one MCS
-      int changepos[2], old_s;//coordinates of position "being changed", and it's previous value
-      std::mt19937 rng;       //MT random number generator (initialized in constructor)
-      std::uniform_real_distribution<double> dis{0.0, 1.0};   //distribution for random number generator
+      intMat SpinConf;   //2D grid for spin conformation
+      intRow F, B;       //forward and back vectors to facilitate looped boundaries
+      double delta_E;    //energy difference between old and proposed states
+	  double E_tot;      //total energy of system
+	  int changepos[2];  //coordinates of position to change 
+	  int old_s;         //old state of changepos, used if reversion is needed
+      
+	  //simulation parameters
+	  double T;          //temperature of the system
+      int L;             //lattice size of the system
+      int SweepSize;     //number of iterations in one MCS
+
+	  //tables to hold re-used computations
+      double ExpTable[5];     
+      double SineTable[3];    
+      double CosTable[3];     
+       
+	  //rng seeded, and int distribution initialized in constructor
+	  std::mt19937 rng;      
+	  std::uniform_real_distribution<double> dis{0.0, 1.0};
       std::uniform_int_distribution<int> gen0toL;
       
-      //functions
-      void initialize_conf();      //called by constructor to initialize a conformation & F,B vectors
-      void initialize_rand();      //called by constructor to initialize random num generator
-      void initialize_energy();    //called by constructor to detemine initial energy 
-      void precalculate_table();   //calculate the values for ExpTable, sineTable, cosTable
+      //functions to initialize simulation 
+      void initialize_conf();  	  
+      void initialize_rand();   
+      void initialize_energy();  
+      void precalculate_table();  
       
-      int random_state();         //returns at random 1, 2, or 3. called by initialize_conf & change_conf
-      double energy_contribution(int s1, int s2); //returns energy contribution of a single nearest neighbour pair 
+	  double energy_contribution(int s1, int s2); 
+	  int random_state(); //randomly select a state for a node in the grid      
 
-      void change_conf();          //randomly selects a position to assign a new random state, s
+	  //utility functions
+      void change_conf();          //assign a random state to a random position
       void calc_delta_E();         //calculate the associated change in energy
       void check_pass();           //check to see if new conformation passes
       void revert();               //revert to old conformation on failure
       void advance();              //update E_tot in the case of a pass
 
     public:
-      //variables
-      
-      //functions
-      MCsim(int L, double T);    //constructor
+      MCsim(int L, double T);    
       void MCSweeps(int Nmcs);   //performs Ncms MC sweeps on the Spin Conformation
-      vec Magnetization();       //calculate and return magnetization of Spin Conformation
-      double Energy();           //calculates and return Energy of Spin Conformation
+      vec Magnetization();       //returns magnetization of Spin Conformation
+      double Energy();           //returns Energy of Spin Conformation
       
 };
